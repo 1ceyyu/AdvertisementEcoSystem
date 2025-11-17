@@ -13,7 +13,6 @@
 
 ## 2. 项目站点与文档
 
-**GitHub 仓库地址**: https://github.com/[YourOrganization]/Precision-Ad-Ecosystem
 **GitHub 仓库地址**: https://github.com/1ceyyu/AdvertisementEcoSystem.git
 
 ## 3. 项目设计与规划
