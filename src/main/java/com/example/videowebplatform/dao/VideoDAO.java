@@ -1,0 +1,12 @@
+package com.example.videowebplatform.dao;
+import com.example.videowebplatform.model.Video;
+import java.util.List;
+public interface VideoDAO {
+    List<Video> getAllVideos();
+
+    // 定义根据 ID 获取单个视频的抽象方法
+    Video getVideoById(int id);
+
+    // 可以继续添加其他操作，如 save, update, delete
+    void saveVideo(Video video);
+}
