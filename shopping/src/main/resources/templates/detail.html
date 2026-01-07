@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title th:text="${product.name} + ' - 详情'">商品详情</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f8f9fa; }
+        .detail-card { border: none; border-radius: 15px; overflow: hidden; }
+        .product-image-container { background-color: #fff; display: flex; align-items: center; justify-content: center; height: 100%; min-height: 400px; }
+        .product-image { max-width: 100%; max-height: 400px; object-fit: contain; }
+        .price-tag { font-size: 2rem; color: #dc3545; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="container mt-5 mb-5">
+    <div class="mb-3">
+        <!-- 修改点：返回链接 -->
+        <a th:href="@{/}" class="btn btn-outline-secondary btn-sm">&larr; 返回首页</a>
+    </div>
+
+    <div class="card shadow detail-card">
+        <div class="row g-0">
+            <div class="col-md-6 border-end">
+                <div class="product-image-container p-4">
+                    <img th:src="${product.imageUrl}" class="product-image" alt="商品图片">
+                </div>
+            </div>
+
+            <div class="col-md-6 bg-white">
+                <div class="p-5 d-flex flex-column h-100 justify-content-center">
+                    <div class="mb-2">
+                        <span class="badge bg-info text-dark" th:text="${product.category}">分类</span>
+                        <span class="text-muted ms-2 small">编号: #<span th:text="${product.id}"></span></span>
+                    </div>
+                    <h1 class="fw-bold mb-3" th:text="${product.name}">商品名称</h1>
+                    <div class="mb-4"><span class="price-tag">¥ <span th:text="${product.price}"></span></span></div>
+                    <h5 class="text-muted mb-3">商品简介</h5>
+                    <p class="text-secondary lh-lg mb-5" th:text="${product.description ?: '暂无详细描述...'}"></p>
+
+                    <div class="mt-auto">
+                        <hr>
+                        <div th:if="${session.user.role == 'USER'}">
+                            <!-- 修改点：加入购物车 action -->
+                            <form th:action="@{/cart/add}" method="post" class="row g-3 align-items-center">
+                                <input type="hidden" name="productId" th:value="${product.id}">
+                                <div class="col-auto"><label class="col-form-label fw-bold">购买数量:</label></div>
+                                <div class="col-auto">
+                                    <div class="input-group">
+                                        <button class="btn btn-outline-secondary" type="button" onclick="this.nextElementSibling.stepDown()">-</button>
+                                        <input type="number" name="quantity" value="1" min="1" class="form-control text-center" style="width: 60px;">
+                                        <!-- JS修复点：previousElementSibling -->
+                                        <button class="btn btn-outline-secondary" type="button" onclick="this.previousElementSibling.stepUp()">+</button>
+                                    </div>
+                                </div>
+                                <div class="col-auto ms-auto">
+                                    <button type="submit" class="btn btn-success btn-lg px-4 shadow-sm">加入购物车</button>
+                                </div>
+                            </form>
+                        </div>
+                        <div th:if="${session.user.role == 'ADMIN'}" class="alert alert-warning mb-0">
+                            管理员模式：无法购买商品。
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
