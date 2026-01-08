@@ -1,0 +1,266 @@
+/* =========================================================================
+   1. 全局变量与基础设置 (Global Base)
+   ========================================================================= */
+:root {
+    --primary-color: #2c3e50;    /* 深蓝灰：主标题/正文 */
+    --accent-color: #3498db;     /* 亮蓝：链接/按钮/高亮 */
+    --accent-hover: #2980b9;     /* 按钮悬停色 */
+    --bg-color: #f4f6f8;         /* 网页整体背景：淡灰蓝 */
+    --card-bg: #ffffff;          /* 卡片背景：纯白 */
+    --border-color: #e1e4e8;     /* 边框颜色 */
+    --text-muted: #95a5a6;       /* 辅助文字颜色 */
+    --danger-color: #e74c3c;     /* 删除/警告 */
+
+    /* 侧边栏宽度设置 */
+    --sidebar-width: 360px;
+}
+
+body {
+    font-family: 'Segoe UI', Roboto, "Helvetica Neue", Arial, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--primary-color);
+    margin: 0;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased; /*字体平滑*/
+}
+
+a { text-decoration: none; color: inherit; transition: color 0.2s; }
+a:hover { color: var(--accent-color); }
+
+/* 通用容器 */
+.container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+
+/* =========================================================================
+   2. UI 组件 (Buttons, Tags, Forms)
+   ========================================================================= */
+/* 按钮 */
+.btn {
+    display: inline-block;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    text-align: center;
+    transition: all 0.2s ease;
+}
+.btn-primary { background-color: var(--accent-color); color: white; }
+.btn-primary:hover { background-color: var(--accent-hover); transform: translateY(-1px); }
+.btn-secondary { background-color: #ecf0f1; color: #555; }
+.btn-secondary:hover { background-color: #bdc3c7; }
+.btn-danger { color: var(--danger-color); background: none; padding: 5px; }
+.btn-danger:hover { text-decoration: underline; }
+.btn-link { background: none; color: var(--accent-color); padding: 5px; }
+
+/* 标签 (Category Tags) */
+.tag {
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    color: white;
+    text-transform: capitalize;
+    letter-spacing: 0.5px;
+}
+.tag-education { background: #3498db; } /* Blue */
+.tag-entertainment { background: #e91e63; } /* Pink */
+.tag-games { background: #9b59b6; } /* Purple */
+.tag-health { background: #2ecc71; } /* Green */
+.tag-tech { background: #34495e; } /* Dark Blue */
+
+/* 输入框 */
+.form-control {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    box-sizing: border-box;
+    font-family: inherit;
+    font-size: 14px;
+    transition: border-color 0.2s;
+}
+.form-control:focus { border-color: var(--accent-color); outline: none; }
+
+/* =========================================================================
+   3. 顶部导航 (Header)
+   ========================================================================= */
+header {
+    background: var(--card-bg);
+    box-shadow: 0 2px 15px rgba(0,0,0,0.05);
+    position: sticky; /* 顶部吸附 */
+    top: 0;
+    z-index: 1000;
+    height: 70px;
+    display: flex;
+    align-items: center;
+}
+
+.nav-wrapper {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.logo {
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--primary-color);
+    letter-spacing: -1px;
+}
+
+.nav-links { display: flex; gap: 15px; }
+.nav-item {
+    cursor: pointer;
+    font-weight: 600;
+    padding: 8px 15px;
+    border-radius: 20px;
+    color: #7f8c8d;
+    transition: all 0.2s;
+}
+.nav-item:hover, .nav-item.active {
+    background-color: #ebf5fb;
+    color: var(--accent-color);
+}
+
+/* 搜索框 */
+.search-box {
+    display: flex;
+    align-items: center;
+    background: #f4f6f8;
+    border-radius: 20px;
+    padding: 5px 15px;
+    border: 1px solid transparent;
+    transition: all 0.2s;
+}
+.search-box:focus-within {
+    background: white;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+.search-box input { border: none; background: transparent; outline: none; padding: 5px; width: 150px; color: #333; }
+.search-btn { border: none; background: none; cursor: pointer; color: #95a5a6; }
+.search-btn:hover { color: var(--accent-color); }
+
+/* =========================================================================
+   4. 主布局架构 (Layout - Index & Detail)
+   ========================================================================= */
+/* 核心布局容器：左侧内容 + 右侧侧边栏 */
+.main-layout, .detail-wrapper {
+    display: flex;
+    gap: 40px; /* 增加间距，大气 */
+    margin-top: 30px;
+    margin-bottom: 50px;
+    align-items: flex-start; /* 顶部对齐，关键属性 */
+}
+
+/* 左侧内容区 (新闻列表 / 文章详情) */
+.news-list, .article-container {
+    flex: 1;     /* 自动占据剩余空间 */
+    min-width: 0; /* 防止Flex子元素溢出 */
+}
+
+/* 右侧侧边栏 (广告位) */
+.sidebar {
+    width: var(--sidebar-width); /* 固定宽度 360px */
+    flex-shrink: 0;
+
+    /* Sticky 效果: 滚动时固定 */
+    position: sticky;
+    top: 90px; /* 距离 header 底部的高度 */
+}
+
+/* =========================================================================
+   5. 首页组件 (News List & Sidebar Cards)
+   ========================================================================= */
+.news-card {
+    background: var(--card-bg);
+    padding: 25px;
+    border-radius: 10px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    transition: transform 0.2s, box-shadow 0.2s;
+    border: 1px solid transparent;
+}
+.news-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.08);
+    border-color: #ecf0f1;
+}
+.news-title { font-size: 20px; font-weight: 700; display: block; margin-bottom: 8px; color: #2c3e50; }
+.news-title:hover { color: var(--accent-color); }
+.news-meta { font-size: 13px; color: var(--text-muted); display: flex; align-items: center; gap: 12px; }
+
+/* 广告卡片美化 */
+.ad-card {
+    background: var(--card-bg);
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    border: 1px solid #f0f0f0;
+}
+.ad-card h4 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    font-size: 18px;
+    color: #444;
+    border-left: 4px solid var(--accent-color);
+    padding-left: 12px;
+}
+
+/* =========================================================================
+   6. 详情页组件 (Detail Page)
+   ========================================================================= */
+.article-container {
+    background: var(--card-bg);
+    padding: 50px;
+    border-radius: 12px;
+    box-shadow: 0 2px 15px rgba(0,0,0,0.03);
+}
+
+.back-link { display: inline-block; margin-bottom: 20px; color: var(--text-muted); font-size: 14px; }
+.article-title { font-size: 32px; margin: 0 0 15px 0; color: #2c3e50; line-height: 1.3; }
+.article-meta { padding-bottom: 25px; border-bottom: 1px solid #eee; margin-bottom: 35px; }
+.article-content {
+    font-size: 19px; /* 更大的字号适合阅读 */
+    line-height: 1.8;
+    color: #34495e;
+}
+.article-content p { margin-bottom: 20px; }
+
+/* =========================================================================
+   7. 后台管理页面 (Admin Page)
+   ========================================================================= */
+.admin-layout {
+    display: grid;
+    grid-template-columns: 350px 1fr; /* 左侧表单固定，右侧表格自适应 */
+    gap: 30px;
+    margin-top: 30px;
+}
+
+.admin-card {
+    background: var(--card-bg);
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.form-group { margin-bottom: 20px; }
+.form-group label { display: block; margin-bottom: 8px; font-weight: 600; color: #555; }
+
+/* 表格样式 */
+.data-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+.data-table th {
+    text-align: left;
+    padding: 15px;
+    color: #7f8c8d;
+    font-weight: 600;
+    border-bottom: 2px solid #ecf0f1;
+    background-color: #f9f9f9;
+}
+.data-table td { padding: 15px; border-bottom: 1px solid #ecf0f1; vertical-align: middle; }
+.data-table tr:hover { background-color: #fcfcfc; }

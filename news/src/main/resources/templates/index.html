@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>全球视界 - 聚合新闻</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+
+<!-- 导航栏 -->
+<header>
+    <div class="container nav-wrapper">
+        <a href="/" class="logo">DailyNews</a>
+        <div class="nav-links">
+            <a th:classappend="${currentCategory == 'education'} ? 'active' : ''" onclick="trackAndGo('education')" class="nav-item">教育</a>
+            <a th:classappend="${currentCategory == 'entertainment'} ? 'active' : ''" onclick="trackAndGo('entertainment')" class="nav-item">娱乐</a>
+            <a th:classappend="${currentCategory == 'games'} ? 'active' : ''" onclick="trackAndGo('games')" class="nav-item">游戏</a>
+            <a th:classappend="${currentCategory == 'health'} ? 'active' : ''" onclick="trackAndGo('health')" class="nav-item">健康</a>
+            <a th:classappend="${currentCategory == 'tech'} ? 'active' : ''" onclick="trackAndGo('tech')" class="nav-item">科技</a>
+        </div>
+
+        <form action="/" method="get" class="search-box">
+            <input type="text" name="keyword" placeholder="搜索新闻..." th:value="${currentKeyword}">
+            <button type="submit" class="search-btn">🔍</button>
+        </form>
+    </div>
+</header>
+
+<div class="container main-layout">
+    <!-- 新闻列表 -->
+    <div class="news-list">
+        <div th:if="${#lists.isEmpty(newsList)}" style="text-align:center; color:#999; margin-top:50px;">
+            没有找到相关新闻
+        </div>
+
+        <div th:each="news : ${newsList}" class="news-card">
+            <div style="flex:1">
+                <a th:href="@{/news/{id}(id=${news.id})}" class="news-title" th:text="${news.title}"></a>
+                <div class="news-meta">
+                    <span th:class="'tag tag-' + ${news.category}" th:text="${news.category}"></span>
+                    <span th:text="${#dates.format(news.createTime, 'yyyy-MM-dd HH:mm')}"></span>
+                </div>
+            </div>
+            <div style="color:#ddd;"> &gt; </div>
+        </div>
+    </div>
+
+    <!-- 侧边栏 -->
+    <aside class="sidebar">
+        <div class="ad-card">
+            <h4 id="ad-title">猜你喜欢</h4>
+            <div id="ad-content-area">加载中...</div>
+            <div style="font-size:12px; color:#aaa; margin-top:15px;">用户ID: <span id="uuid-display"></span></div>
+        </div>
+    </aside>
+</div>
+
+<script>
+    let uuid = localStorage.getItem('user_uuid');
+    if (!uuid) {
+        uuid = 'user_' + Math.random().toString(36).substring(2);
+        localStorage.setItem('user_uuid', uuid);
+    }
+    document.getElementById('uuid-display').innerText = uuid;
+
+    function trackAndGo(category) {
+        fetch('/api/track', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ uuid: uuid, category: category })
+        }).finally(() => {
+            window.location.href = '/?category=' + category;
+        });
+    }
+
+    fetch('/api/ad/recommend?uuid=' + uuid)
+        .then(res => res.json())
+        .then(ad => {
+            const area = document.getElementById('ad-content-area');
+            const titleElem = document.getElementById('ad-title');
+
+            // 1. 设置标题
+            titleElem.innerText = ad.title || '推荐内容';
+
+            // 2. 获取原始 URL
+            let rawUrl = ad.media_url || ad.mediaUrl;
+
+            // ==================================================
+            // 🚑 紧急修复：强行给朋友的 URL 加上 8080 端口
+            // ==================================================
+            let mediaUrl = "";
+            if (rawUrl) {
+                // 如果 URL 里包含这个 IP，且后面紧跟的是 / (说明没带端口)
+                // 就把它替换成带 :8080 的
+                mediaUrl = rawUrl.replace('175.24.232.219/', '175.24.232.219:8080/');
+
+                console.log("修复后的图片地址:", mediaUrl); // 方便在控制台确认
+            }
+
+            const targetUrl = ad.target_url || ad.targetUrl || '#';
+
+            if (!mediaUrl) {
+                area.innerHTML = '<p>暂无广告图片</p>';
+                return;
+            }
+
+            // 3. 渲染 HTML (保持之前的优化：防盗链 + 点击跳转)
+            let htmlContent = '';
+
+            if (ad.type === 'video') {
+                htmlContent = `
+                    <div style="position: relative;">
+                        <video src="${mediaUrl}" controls autoplay muted style="width:100%; border-radius:5px;"></video>
+                        <div style="margin-top:5px;">
+                            <a href="${targetUrl}" target="_blank" class="btn btn-primary" style="display:block; text-align:center; font-size:12px; padding:5px;">
+                                点击了解详情 &gt;
+                            </a>
+                        </div>
+                    </div>
+                `;
+            } else {
+                htmlContent = `
+                    <a href="${targetUrl}" target="_blank" style="display:block; cursor:pointer;">
+                        <img src="${mediaUrl}"
+                             referrerpolicy="no-referrer"
+                             alt="${ad.title}"
+                             style="width:100%; border-radius:5px; transition: opacity 0.2s; min-height: 150px; background: #f0f0f0;"
+                             onerror="this.onerror=null; this.src='https://via.placeholder.com/300x200?text=Load+Error';">
+                    </a>
+                `;
+            }
+
+            area.innerHTML = htmlContent;
+        })
+        .catch(err => {
+            console.error("Fetch Error:", err);
+            document.getElementById('ad-content-area').innerHTML = "加载推荐失败";
+        });
+</script>
+</body>
+</html>
