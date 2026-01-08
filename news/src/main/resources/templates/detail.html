@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${news.title}"></title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+
+<!-- 引入统一的导航栏 -->
+<header>
+    <div class="container nav-wrapper">
+        <a href="/" class="logo">DailyNews</a>
+        <div class="nav-links">
+            <a href="/?category=education" class="nav-item">教育</a>
+            <a href="/?category=entertainment" class="nav-item">娱乐</a>
+            <a href="/?category=games" class="nav-item">游戏</a>
+            <a href="/?category=health" class="nav-item">健康</a>
+            <a href="/?category=tech" class="nav-item">科技</a>
+        </div>
+        <a href="/" class="btn btn-secondary" style="padding: 5px 15px; font-size:12px;">返回首页</a>
+    </div>
+</header>
+
+<div class="container detail-wrapper">
+
+    <!-- 左侧：文章内容 -->
+    <div class="article-container">
+        <h1 class="article-title" th:text="${news.title}"></h1>
+
+        <div class="article-meta">
+            <span th:class="'tag tag-' + ${news.category}" th:text="${news.category}"></span>
+            <span style="margin-left:10px; color:#888;" th:text="${#dates.format(news.createTime, 'yyyy-MM-dd HH:mm')}"></span>
+        </div>
+
+        <div class="article-content">
+            <p th:utext="${news.content}"></p>
+        </div>
+
+        <!-- 文章底部的隐藏字段，用于JS获取 -->
+        <input type="hidden" id="news-category" th:value="${news.category}">
+    </div>
+
+    <!-- 右侧：广告栏 (与首页保持一致) -->
+    <aside class="sidebar">
+        <div class="ad-card">
+            <h4 id="ad-title">热门推荐</h4>
+            <div id="ad-content-area" style="min-height: 200px; display:flex; align-items:center; justify-content:center; background:#fafafa; border-radius:8px;">
+                <span style="color:#ccc;">加载中...</span>
+            </div>
+            <div style="font-size:12px; color:#aaa; margin-top:15px; text-align:center;">
+                Sponsored by Partner
+            </div>
+        </div>
+    </aside>
+
+</div>
+
+<script>
+    // 1. 获取 UUID
+    let uuid = localStorage.getItem('user_uuid');
+    if (!uuid) {
+        uuid = 'user_' + Math.random().toString(36).substring(2);
+        localStorage.setItem('user_uuid', uuid);
+    }
+
+    // 2. 页面加载完成后执行：记录行为 + 加载广告
+    window.onload = function() {
+        let category = document.getElementById('news-category').value;
+
+        // 记录当前阅读行为 (这一步会让用户对当前分类的兴趣激增)
+        if (uuid && category) {
+            fetch('/api/track', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ uuid: uuid, category: category })
+            }).then(() => {
+                console.log("阅读行为已记录，正在刷新推荐...");
+                // 行为记录成功后，再加载广告，这样能确保广告是基于“刚看了这篇文章”推荐的
+                loadAd();
+            });
+        } else {
+            loadAd();
+        }
+    };
+
+    // 3. 广告加载函数 (包含端口修复、防盗链、跳转逻辑)
+    function loadAd() {
+        fetch('/api/ad/recommend?uuid=' + uuid)
+            .then(res => res.json())
+            .then(ad => {
+                const area = document.getElementById('ad-content-area');
+                document.getElementById('ad-title').innerText = ad.title || '猜你喜欢';
+
+                // === 端口修复 ===
+                let rawUrl = ad.media_url || ad.mediaUrl;
+                let mediaUrl = "";
+                if (rawUrl) {
+                    mediaUrl = rawUrl.replace('175.24.232.219/', '175.24.232.219:8080/');
+                }
+                const targetUrl = ad.target_url || ad.targetUrl || '#';
+
+                if (!mediaUrl) {
+                    area.innerHTML = '暂无推荐';
+                    return;
+                }
+
+                // === 渲染 ===
+                let htmlContent = '';
+                if (ad.type === 'video') {
+                    htmlContent = `
+                        <div style="width:100%;">
+                            <video src="${mediaUrl}" controls autoplay muted style="width:100%; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.1);"></video>
+                            <a href="${targetUrl}" target="_blank" class="btn btn-primary" style="display:block; margin-top:10px; text-align:center;">查看详情</a>
+                        </div>
+                    `;
+                } else {
+                    htmlContent = `
+                        <a href="${targetUrl}" target="_blank" style="display:block; cursor:pointer; width:100%;">
+                            <img src="${mediaUrl}"
+                                 referrerpolicy="no-referrer"
+                                 alt="${ad.title}"
+                                 style="width:100%; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.1); transition: opacity 0.2s;"
+                                 onerror="this.onerror=null; this.src='https://via.placeholder.com/350x250?text=Load+Error';">
+                        </a>
+                    `;
+                }
+                area.innerHTML = htmlContent;
+            })
+            .catch(err => console.error(err));
+    }
+</script>
+</body>
+</html>

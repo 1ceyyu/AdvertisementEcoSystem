@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>后台管理</title>
+  <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+
+<div class="container" style="margin-top:20px; display:flex; justify-content:space-between; align-items:center;">
+  <h1>📰 新闻内容管理</h1>
+  <a href="/" class="btn btn-secondary">回到首页</a>
+</div>
+
+<div class="container admin-layout">
+  <!-- 左侧：表单 -->
+  <div class="admin-card">
+    <h2 id="form-title" style="margin-top:0;">发布新闻</h2>
+    <form action="/admin/save" method="post">
+      <input type="hidden" name="id" id="news-id">
+
+      <div class="form-group">
+        <label>标题</label>
+        <input type="text" name="title" id="news-title" class="form-control" required>
+      </div>
+
+      <div class="form-group">
+        <label>分类</label>
+        <select name="category" id="news-category" class="form-control">
+          <option value="education">教育</option>
+          <option value="entertainment">娱乐</option>
+          <option value="games">游戏</option>
+          <option value="health">健康</option>
+          <option value="tech">科技</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>内容</label>
+        <textarea name="content" id="news-content" rows="10" class="form-control" required></textarea>
+      </div>
+
+      <button type="submit" class="btn btn-primary" style="width:100%;">保存 / 更新</button>
+      <button type="button" onclick="resetForm()" class="btn btn-secondary" style="width:100%; margin-top:10px;">清空 / 新增模式</button>
+    </form>
+  </div>
+
+  <!-- 右侧：列表 -->
+  <div class="admin-card">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+      <h2 style="margin:0;">已发布列表</h2>
+      <form action="/admin" method="get" class="search-box" style="border:1px solid #ddd;">
+        <input type="text" name="keyword" placeholder="搜标题...">
+        <button type="submit" class="search-btn">🔍</button>
+      </form>
+    </div>
+
+    <table class="data-table">
+      <thead>
+      <tr>
+        <th>标题</th>
+        <th width="50">分类</th>
+        <th width="120">操作</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="news : ${allNews}">
+        <td th:text="${news.title}"></td>
+        <td><span th:class="'tag tag-' + ${news.category}" th:text="${news.category}"></span></td>
+        <td>
+                            <span class="btn-link" style="cursor:pointer;"
+                                  th:data-id="${news.id}"
+                                  th:data-title="${news.title}"
+                                  th:data-category="${news.category}"
+                                  th:data-content="${news.content}"
+                                  onclick="editNews(this)">
+    编辑
+</span>
+          <a th:href="@{/admin/delete/{id}(id=${news.id})}" class="btn-danger" onclick="return confirm('确定删除？')">删除</a>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+  function editNews(btn) {
+    // 1. 获取数据
+    // 注意：这里使用 getAttribute 是最稳妥的方法
+    var id = btn.getAttribute('data-id');
+    var title = btn.getAttribute('data-title');
+    var category = btn.getAttribute('data-category');
+    var content = btn.getAttribute('data-content');
+
+    console.log("正在编辑 ID:", id, "标题:", title); // 方便你在控制台调试
+
+    // 2. 填充表单
+    // 修改标题显示
+    document.getElementById('form-title').innerText = "修改新闻 (ID: " + id + ")";
+
+    // 填充隐藏的 ID 输入框 (关键！否则保存时会变成新增)
+    document.getElementById('news-id').value = id;
+
+    // 填充其他字段
+    document.getElementById('news-title').value = title;
+    document.getElementById('news-category').value = category;
+    document.getElementById('news-content').value = content;
+  }
+
+  function resetForm() {
+    document.getElementById('form-title').innerText = "发布新闻";
+    document.getElementById('news-id').value = "";
+    document.getElementById('news-title').value = "";
+    document.getElementById('news-content').value = "";
+    document.getElementById('news-category').value = "education"; // 重置为默认选项
+  }
+</script>
+</body>
+</html>
