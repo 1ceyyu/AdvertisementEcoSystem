@@ -6,13 +6,47 @@ function App() {
   const [ads, setAds] = useState([])
   const [loading, setLoading] = useState(true)
 
+  // 定义硬编码的公网地址 (后端真实地址)
+  const PUBLIC_HOST = 'http://175.24.232.219:8080'
+
   // 获取广告资源列表
   const fetchAds = async () => {
     try {
       setLoading(true)
-      // 通过 Vite 代理请求后端 /api/ads
+      
+      // 请求后端数据 (走 Vite 代理)
       const res = await axios.get('/api/ads')
-      setAds(res.data)
+      
+      // --- 🚀 最终修正版逻辑 ---
+      const fixedData = res.data.map(ad => {
+        if (ad.media_url) {
+          try {
+            // 1. 尝试解析 URL，无论后端返回的是 localhost 还是内网 IP
+            // 如果已经是完整 URL (http开头)
+            let path = ad.media_url
+            if (ad.media_url.startsWith('http')) {
+               const urlObj = new URL(ad.media_url)
+               path = urlObj.pathname // 只提取 "/uploads/xxx.png" 部分
+            }
+
+            // 2. 强制拼接成我们想要的公网 IP + 端口
+            // 结果变成: http://175.24.232.219:8080/uploads/xxx.png
+            const finalUrl = `${PUBLIC_HOST}${path}`
+
+            return {
+              ...ad,
+              media_url: finalUrl
+            }
+          } catch (e) {
+            console.warn("URL解析失败，保持原样:", ad.media_url)
+            return ad
+          }
+        }
+        return ad
+      })
+      // --- 逻辑结束 ---
+
+      setAds(fixedData)
     } catch (error) {
       console.error("获取资源失败:", error)
     } finally {
@@ -38,16 +72,25 @@ function App() {
         <div style={styles.grid}>
           {ads.map((ad) => (
             <div key={ad.id} style={styles.card}>
-              {/* 资源预览区：根据 type 自动识别视频或图片 */}
+              {/* 资源预览区 */}
               <div style={styles.mediaBox}>
                 {ad.type === 'video' ? (
-                  <video src={ad.media_url} controls style={styles.media} />
+                  <video 
+                    src={ad.media_url} 
+                    controls 
+                    style={styles.media} 
+                    preload="metadata" // 优化加载
+                  />
                 ) : (
                   <img 
                     src={ad.media_url} 
                     alt={ad.title} 
                     style={styles.media} 
-                    onError={(e) => {e.target.src='https://via.placeholder.com/300x180?text=File+Not+Found'}}
+                    onError={(e) => {
+                      // 图片加载失败时的兜底图
+                      e.target.src='https://via.placeholder.com/300x180?text=Load+Failed'
+                      e.target.style.objectFit = 'cover'
+                    }}
                   />
                 )}
               </div>
@@ -60,7 +103,7 @@ function App() {
                   <span style={{fontSize: '12px', color: '#999'}}>ID: {ad.id}</span>
                 </div>
                 
-                {/* 核心：展示供外部调用的 API 链接 */}
+                {/* 外部调用链接展示 */}
                 <div style={styles.apiBox}>
                   <p style={styles.apiLabel}>外部调用链接 (API Resource):</p>
                   <code style={styles.code}>{ad.media_url}</code>
@@ -80,7 +123,7 @@ function App() {
   )
 }
 
-// 纯 CSS-in-JS 样式，无需额外 CSS 文件
+// 纯 CSS-in-JS 样式
 const styles = {
   container: { padding: '40px 20px', maxWidth: '1100px', margin: '0 auto', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' },
   header: { textAlign: 'center', marginBottom: '40px' },
